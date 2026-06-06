@@ -14,7 +14,12 @@ dist-ssr
 .vinxi
 .tanstack/**
 .nitro
- .vercel
+.vercel
+.env
+.env.local
+.env.production
+*.tgz
+tmp_*
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
