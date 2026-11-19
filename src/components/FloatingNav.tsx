@@ -4,7 +4,7 @@ import { WHATSAPP_URL } from "@/lib/links";
 
 const links = [
   { href: "#inicio", label: "Início" },
-  { href: "#sobre", label: "A Kairos" },
+  { href: "#sobre", label: "Sobre" },
   { href: "#servicos", label: "Serviços" },
   { href: "#galeria", label: "Trabalhos" },
   { href: "#contato", label: "Encontre-nos" },
