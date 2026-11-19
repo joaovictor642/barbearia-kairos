@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   Scissors,
@@ -6,10 +6,11 @@ import {
   Phone,
   Instagram,
   Clock,
-  Star,
   Sparkles,
-  Crown,
-  ExternalLink,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  Plus,
 } from "lucide-react";
 import { FloatingNav } from "@/components/FloatingNav";
 import { WhatsappFloat } from "@/components/WhatsappFloat";
@@ -26,16 +27,16 @@ import work5 from "@/assets/work5.jpg";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Barbearia Kairos — Estilo, Tradição e Precisão" },
+      { title: "Barbearia Kairos — Seu estilo. No tempo certo." },
       {
         name: "description",
         content:
-          "Barbearia Kairos: cortes modernos, barba clássica e atendimento premium. Agende seu horário pelo WhatsApp.",
+          "Corte, barba e cuidado com os detalhes em Diadema. Conheça os serviços da Barbearia Kairos e agende seu horário pelo WhatsApp.",
       },
-      { property: "og:title", content: "Barbearia Kairos" },
+      { property: "og:title", content: "Barbearia Kairos — Seu estilo. No tempo certo." },
       {
         property: "og:description",
-        content: "Cortes modernos, barba clássica e atendimento premium.",
+        content: "Tradição, estilo e precisão em Diadema. Agende pelo WhatsApp.",
       },
       { property: "og:image", content: heroImg },
     ],
@@ -46,8 +47,9 @@ export const Route = createFileRoute("/")({
 const serviceCategories = [
   {
     key: "servicos",
-    label: "Serviços",
-    icon: Scissors,
+    label: "Corte & barba",
+    image: work2,
+    description: "Do primeiro contorno ao último detalhe.",
     items: [
       { title: "Corte", price: "R$ 40,00" },
       { title: "Corte Giletado", price: "R$ 45,00" },
@@ -60,7 +62,8 @@ const serviceCategories = [
   {
     key: "penteados",
     label: "Penteados",
-    icon: Star,
+    image: hero2Img,
+    description: "Personalidade em cada finalização.",
     items: [
       { title: "Blindado", price: "R$ 20,00" },
       { title: "Blindado Pigmentado", price: "R$ 25,00" },
@@ -70,7 +73,8 @@ const serviceCategories = [
   {
     key: "quimica",
     label: "Química",
-    icon: Sparkles,
+    image: work4,
+    description: "Um novo visual começa com cuidado.",
     items: [
       { title: "Progressiva", price: "R$ 75,00" },
       { title: "Alisante", price: "R$ 45,00" },
@@ -80,521 +84,492 @@ const serviceCategories = [
     ],
   },
 ];
-
-const gallery = [work1, work2, work3, work4, work5, hero2Img];
-
-const MAP_LATITUDE = -23.7112639026494;
-const MAP_LONGITUDE = -46.60781124931023;
+const gallery = [work2, work3, work4, work5, hero2Img, work1];
+const INSTAGRAM_URL = "https://www.instagram.com/kairos_barbershop.oficial/";
 const MAP_ZOOM = 16;
-const MAP_TILE_SIZE = 256;
-const MAP_TILE_SCALE = 2 ** MAP_ZOOM;
-const MAP_TILE_X_POSITION = ((MAP_LONGITUDE + 180) / 360) * MAP_TILE_SCALE;
-const MAP_TILE_Y_POSITION =
-  ((1 - Math.asinh(Math.tan((MAP_LATITUDE * Math.PI) / 180)) / Math.PI) / 2) * MAP_TILE_SCALE;
-const MAP_TILE_X = Math.floor(MAP_TILE_X_POSITION);
-const MAP_TILE_Y = Math.floor(MAP_TILE_Y_POSITION);
-const MAP_PIXEL_X = (MAP_TILE_X_POSITION - MAP_TILE_X) * MAP_TILE_SIZE;
-const MAP_PIXEL_Y = (MAP_TILE_Y_POSITION - MAP_TILE_Y) * MAP_TILE_SIZE;
-const MAP_TILES = Array.from({ length: 9 }, (_, index) => ({
-  x: MAP_TILE_X + (index % 3) - 1,
-  y: MAP_TILE_Y + Math.floor(index / 3) - 1,
+const mapX = ((-46.60781124931023 + 180) / 360) * 2 ** MAP_ZOOM;
+const mapY =
+  ((1 - Math.asinh(Math.tan((-23.7112639026494 * Math.PI) / 180)) / Math.PI) / 2) * 2 ** MAP_ZOOM;
+const mapTiles = Array.from({ length: 9 }, (_, i) => ({
+  x: Math.floor(mapX) + (i % 3) - 1,
+  y: Math.floor(mapY) + Math.floor(i / 3) - 1,
 }));
 
 function Index() {
+  const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const [activeServiceCategory, setActiveServiceCategory] = useState(serviceCategories[0].key);
-  const lightboxTriggerRef = useRef<HTMLButtonElement | null>(null);
-  const lightboxCloseButtonRef = useRef<HTMLButtonElement | null>(null);
-  const lightboxRef = useRef<HTMLDivElement | null>(null);
-  const activeCategory = serviceCategories.find(
-    (category) => category.key === activeServiceCategory,
-  );
+  const heroRef = useRef<HTMLElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const category = serviceCategories[activeCategoryIndex];
   const isLightboxOpen = lightboxIndex !== null;
-
-  const openLightbox = (index: number, trigger: HTMLButtonElement) => {
-    lightboxTriggerRef.current = trigger;
-    setLightboxIndex(index);
-  };
-  const closeLightbox = () => setLightboxIndex(null);
-  const prevLightboxImage = () =>
-    setLightboxIndex((index) =>
-      index === null ? null : (index + gallery.length - 1) % gallery.length,
+  const changeImage = (direction: number) =>
+    setLightboxIndex((i) =>
+      i === null ? null : (i + direction + gallery.length) % gallery.length,
     );
-  const nextLightboxImage = () =>
-    setLightboxIndex((index) => (index === null ? null : (index + 1) % gallery.length));
 
   useEffect(() => {
-    const revealTargets = document.querySelectorAll<HTMLElement>("[data-scroll-reveal]");
-    if (
-      revealTargets.length === 0 ||
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
-      !("IntersectionObserver" in window)
-    ) {
-      return;
-    }
-
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (motion.matches || !("IntersectionObserver" in window)) return;
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          entry.target.classList.add("is-visible");
-          observer.unobserve(entry.target);
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
         });
       },
-      { threshold: 0.12, rootMargin: "0px 0px -32px 0px" },
+      { threshold: 0.08 },
     );
-
-    revealTargets.forEach((target) => observer.observe(target));
-    document.documentElement.classList.add("has-scroll-reveal");
-
+    document
+      .querySelectorAll<HTMLElement>("[data-reveal]")
+      .forEach((target) => observer.observe(target));
+    document.documentElement.classList.add("motion-ready");
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      if (motion.matches || !heroRef.current) return;
+      const progress = Math.min(window.scrollY / heroRef.current.offsetHeight, 1);
+      heroRef.current.style.setProperty("--hero-shift", `${progress * 90}px`);
+    };
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+    const onMotionChange = () => {
+      if (motion.matches) {
+        document.documentElement.classList.remove("motion-ready");
+        heroRef.current?.style.setProperty("--hero-shift", "0px");
+      }
+    };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    motion.addEventListener("change", onMotionChange);
     return () => {
       observer.disconnect();
-      document.documentElement.classList.remove("has-scroll-reveal");
+      window.removeEventListener("scroll", onScroll);
+      motion.removeEventListener("change", onMotionChange);
+      window.cancelAnimationFrame(frame);
+      document.documentElement.classList.remove("motion-ready");
     };
   }, []);
 
   useEffect(() => {
-    if (!isLightboxOpen) return;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setLightboxIndex(null);
-      } else if (event.key === "ArrowLeft") {
-        setLightboxIndex((index) =>
-          index === null ? null : (index + gallery.length - 1) % gallery.length,
-        );
-      } else if (event.key === "ArrowRight") {
-        setLightboxIndex((index) => (index === null ? null : (index + 1) % gallery.length));
-      } else if (event.key === "Tab") {
-        const focusableElements =
-          lightboxRef.current?.querySelectorAll<HTMLElement>("button:not(:disabled)");
-        if (!focusableElements?.length) return;
-        const firstElement = focusableElements[0];
-        const lastElement = focusableElements[focusableElements.length - 1];
-        if (event.shiftKey && document.activeElement === firstElement) {
-          event.preventDefault();
-          lastElement.focus();
-        } else if (!event.shiftKey && document.activeElement === lastElement) {
-          event.preventDefault();
-          firstElement.focus();
-        }
-      }
-    };
-
-    lightboxCloseButtonRef.current?.focus();
-    window.addEventListener("keydown", handleKeyDown);
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (!isLightboxOpen) {
+      if (dialog.open) dialog.close();
+      return;
+    }
+    if (!dialog.open) dialog.showModal();
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      if (lightboxTriggerRef.current?.isConnected) lightboxTriggerRef.current.focus();
+      document.body.style.overflow = previousOverflow;
     };
   }, [isLightboxOpen]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
+    <div className="kairos-site">
+      <a className="skip-link" href="#conteudo">
+        Pular para o conteúdo
+      </a>
       <FloatingNav />
       <WhatsappFloat />
-
-      {/* HERO */}
-      <section
-        id="inicio"
-        className="relative min-h-[90svh] flex items-center justify-center pt-24 pb-12"
-      >
-        <div className="absolute inset-0">
-          <img
-            src={heroImg}
-            alt="Barbearia Kairos"
-            className="w-full h-full object-cover"
-            width={1600}
-            height={1024}
-          />
-          <div className="absolute inset-0 bg-linear-to-b from-background/80 via-background/60 to-background" />
-          <div className="absolute inset-0" style={{ background: "var(--gradient-radial-gold)" }} />
-        </div>
-
-        <div className="relative z-10 text-center px-6 max-w-5xl animate-fade-up">
-          <div className="inline-flex items-center gap-2 glass rounded-full px-5 py-2 mb-7">
-            <span className="w-2 h-2 rounded-full bg-gold" />
-            <span className="text-xs font-heading tracking-widest text-foreground">
-              TRADIÇÃO E ESTILO
-            </span>
+      <main id="conteudo">
+        <section id="inicio" className="hero" ref={heroRef} aria-labelledby="hero-title">
+          <div className="hero-visual" aria-hidden="true">
+            <img src={heroImg} alt="" width={1920} height={1080} fetchPriority="high" />
           </div>
-
-          <h1 className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-[0.95] text-shadow-lg mb-6">
-            BARBEARIA
-            <br />
-            <span className="gold-gradient">KAIROS</span>
-          </h1>
-
-          <p className="text-base md:text-lg text-foreground/90 max-w-2xl mx-auto mb-8 font-light leading-relaxed">
-            Onde cada corte é uma arte. Cortes modernos, barba clássica e atendimento premium em um
-            ambiente sofisticado.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <a
-              href={WHATSAPP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group bg-gradient-gold text-primary-foreground px-8 py-4 rounded-full font-heading tracking-wider shadow-gold hover:-translate-y-0.5 hover:brightness-105 transition-all duration-200 flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            >
-              AGENDAR HORÁRIO
-              <Scissors className="w-4 h-4 group-hover:rotate-12 transition-transform" />
-            </a>
-            <a
-              href="#servicos"
-              className="glass px-8 py-4 rounded-full font-heading tracking-wider hover:bg-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            >
-              VER SERVIÇOS
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* SOBRE */}
-      <section id="sobre" className="py-24 md:py-32 relative">
-        <div className="container mx-auto px-6 grid md:grid-cols-2 gap-12 md:gap-20 items-center">
-          <div className="card-3d">
-            <div className="card-3d-inner relative" data-scroll-reveal>
-              <div className="absolute -inset-4 bg-gradient-gold opacity-10 blur-xl rounded-3xl" />
-              <img
-                src={barberImg}
-                alt="Mestre Barbeiro Kairos"
-                className="relative rounded-2xl shadow-3d w-full object-cover gold-ring"
-                width={1024}
-                height={1280}
-                loading="lazy"
-              />
-            </div>
-          </div>
-
-          <div data-scroll-reveal>
-            <div className="font-heading text-sm tracking-[0.4em] text-gold mb-4">
-              SOBRE O MESTRE
-            </div>
-            <h2 className="font-display text-4xl md:text-6xl font-bold mb-6 leading-tight">
-              A arte de transformar <span className="text-gradient-gold">presença</span>.
-            </h2>
-            <p className="text-foreground/80 text-lg leading-relaxed mb-4">
-              O mestre por trás da Kairos une técnica clássica, olhar contemporâneo e cuidado aos
-              detalhes.
+          <div className="hero-grid" aria-hidden="true" />
+          <div className="hero-content page-width">
+            <p className="eyebrow hero-enter">
+              Barbearia Kairos <span>/</span> Diadema, SP
             </p>
-            <p className="text-muted-foreground leading-relaxed mb-8">
-              Cada cliente recebe um atendimento personalizado, em um ambiente pensado para ser
-              refúgio e ritual. Mais do que cortar cabelo, esculpimos a sua melhor versão.
-            </p>
-
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                { i: Scissors, t: "Técnica refinada" },
-                { i: Crown, t: "Atendimento VIP" },
-                { i: Sparkles, t: "Produtos premium" },
-                { i: Clock, t: "Horário marcado" },
-              ].map((f) => (
-                <div key={f.t} className="flex items-center gap-3 glass rounded-xl p-4">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-gold flex items-center justify-center shrink-0">
-                    <f.i className="w-5 h-5 text-background" />
-                  </div>
-                  <span className="font-medium text-sm">{f.t}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* SERVIÇOS */}
-      <section id="servicos" className="py-24 md:py-32 relative bg-card/30">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-12" data-scroll-reveal>
-            <div className="font-heading text-sm tracking-[0.4em] text-gold mb-4">
-              NOSSOS SERVIÇOS
-            </div>
-            <h2 className="font-display text-4xl md:text-6xl font-bold">
-              Atendimentos <span className="text-gradient-gold-alt">masculinos</span>
-            </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto mt-4 leading-relaxed">
-              Explore os serviços disponíveis na Barbearia Kairos.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap justify-center gap-3 mb-10" data-scroll-reveal>
-            {serviceCategories.map((category) => {
-              const CategoryIcon = category.icon;
-              return (
-                <button
-                  key={category.key}
-                  type="button"
-                  aria-pressed={activeServiceCategory === category.key}
-                  className={`rounded-full px-5 py-3 font-semibold inline-flex items-center gap-2 transition-all ${
-                    activeServiceCategory === category.key
-                      ? "bg-gradient-gold text-background shadow-gold"
-                      : "glass text-foreground hover:bg-white/10"
-                  }`}
-                  onClick={() => setActiveServiceCategory(category.key)}
-                >
-                  <CategoryIcon className="w-4 h-4" />
-                  {category.label}
-                </button>
-              );
-            })}
-          </div>
-
-          <div
-            key={activeCategory?.key}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 animate-category-in"
-          >
-            {activeCategory?.items.map((item, index) => {
-              const CategoryIcon = activeCategory.icon;
-              return (
-                <article key={item.title} className="card-3d card-3d-static">
-                  <div
-                    className="card-3d-inner service-card-enter glass rounded-xl p-6 md:p-7 h-full min-h-52 shadow-card relative overflow-hidden"
-                    style={{ animationDelay: `${index * 55}ms` }}
-                  >
-                    <div className="absolute inset-0 bg-gold/5 pointer-events-none" />
-                    <div className="relative z-10 flex h-full flex-col">
-                      <div className="w-12 h-12 rounded-lg bg-gradient-gold flex items-center justify-center mb-4">
-                        <CategoryIcon className="w-7 h-7 text-background" />
-                      </div>
-                      <h3 className="font-display text-xl md:text-2xl font-bold mb-5 min-h-12">
-                        {item.title}
-                      </h3>
-                      <div className="mt-auto flex items-center justify-between gap-3 pt-4 border-t border-border">
-                        <span className="text-sm text-muted-foreground">Valor</span>
-                        <span className="font-display text-xl md:text-2xl font-bold text-gold tabular-nums">
-                          {item.price}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* GALERIA */}
-      <section id="galeria" className="py-24 md:py-32">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16" data-scroll-reveal>
-            <div className="font-heading text-sm tracking-[0.4em] text-gold mb-4">PORTFÓLIO</div>
-            <h2 className="font-display text-4xl md:text-6xl font-bold">
-              Nosso <span className="text-gradient-gold-alt">trabalho</span>
-            </h2>
-            <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
-              Uma seleção dos cortes e estilos que assinamos.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6" data-scroll-reveal>
-            {gallery.map((src, i) => (
-              <button
-                type="button"
-                key={i}
-                onClick={(event) => openLightbox(i, event.currentTarget)}
-                aria-label={`Abrir imagem ${i + 1}`}
-                className={`card-3d group relative overflow-hidden rounded-xl cursor-zoom-in border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
-                  i === 0 ? "md:col-span-2 md:row-span-2" : ""
-                }`}
-              >
-                <div className="card-3d-inner relative aspect-square md:aspect-auto md:h-full">
-                  <img
-                    src={src}
-                    alt={`Trabalho ${i + 1}`}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    width={800}
-                    height={1024}
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-linear-to-t from-background via-background/20 to-transparent opacity-60 group-hover:opacity-90 transition-opacity" />
-                  <div className="absolute bottom-4 left-4 right-4 translate-y-2 group-hover:translate-y-0 transition-transform">
-                    <div className="font-heading text-xs tracking-widest text-gold">KAIROS</div>
-                    <div className="font-display text-lg font-bold">Estilo #{i + 1}</div>
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-          {lightboxIndex !== null && (
-            <div
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 px-4 py-6 backdrop-blur-sm"
-              onClick={closeLightbox}
-              role="dialog"
-              aria-modal="true"
-              aria-label="Galeria de imagens"
-              ref={lightboxRef}
-            >
-              <button
-                type="button"
-                ref={lightboxCloseButtonRef}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  closeLightbox();
-                }}
-                className="absolute top-5 right-5 rounded-full bg-background/90 p-3 text-2xl text-foreground shadow-lg transition hover:bg-background"
-                aria-label="Fechar imagem"
-              >
-                ×
-              </button>
-              <button
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  prevLightboxImage();
-                }}
-                className="absolute left-5 top-1/2 -translate-y-1/2 rounded-full bg-background/90 p-3 text-3xl text-foreground shadow-lg transition hover:bg-background"
-                aria-label="Imagem anterior"
-              >
-                ‹
-              </button>
-              <div
-                className="relative max-h-[90vh] w-full max-w-[90vw] sm:max-w-[80vw] md:max-w-225"
-                onClick={(event) => event.stopPropagation()}
-              >
-                <img
-                  src={gallery[lightboxIndex]}
-                  alt={`Trabalho ${lightboxIndex + 1}`}
-                  className="h-full w-full max-h-[90vh] max-w-full object-contain rounded-3xl shadow-2xl"
-                />
-              </div>
-              <button
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  nextLightboxImage();
-                }}
-                className="absolute right-5 top-1/2 -translate-y-1/2 rounded-full bg-background/90 p-3 text-3xl text-foreground shadow-lg transition hover:bg-background"
-                aria-label="Próxima imagem"
-              >
-                ›
-              </button>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* CONTATO / LOCALIZAÇÃO */}
-      <section id="contato" className="py-24 md:py-32 bg-card/30">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16" data-scroll-reveal>
-            <div className="font-heading text-sm tracking-[0.4em] text-gold mb-4">VISITE-NOS</div>
-            <h2 className="font-display text-4xl md:text-6xl font-bold">
-              Encontre a Barbearia <span className="gold-streak">Kairos</span>
-            </h2>
-          </div>
-
-          <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
-            <div className="glass rounded-2xl p-8 shadow-card space-y-6" data-scroll-reveal>
-              <div className="flex gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-gold flex items-center justify-center shrink-0">
-                  <MapPin className="w-6 h-6 text-background" />
-                </div>
-                <div>
-                  <h3 className="font-display text-xl font-bold mb-1">Endereço</h3>
-                  <p className="text-muted-foreground">
-                    Av. São Bernardo, 357 - Jardim Uniao
-                    <br />
-                    Diadema - SP, CEP 09981-010
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-gold flex items-center justify-center shrink-0">
-                  <Clock className="w-6 h-6 text-background" />
-                </div>
-                <div>
-                  <h3 className="font-display text-xl font-bold mb-1">Horário</h3>
-                  <p className="text-muted-foreground">
-                    Ter — Sáb: 10h às 20h
-                    <br />
-                    Dom — Seg: Fechado
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-gold flex items-center justify-center shrink-0">
-                  <Phone className="w-6 h-6 text-background" />
-                </div>
-                <div>
-                  <h3 className="font-display text-xl font-bold mb-1">Contato</h3>
-                  <p className="text-muted-foreground">
-                    Leandro - Barbearia Kairos
-                    <br />
-                    (11) 94779-0902
-                    <br />
-                    <a
-                      href={WHATSAPP_URL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-gold hover:underline"
-                    >
-                      Conversar no WhatsApp
-                    </a>
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-3 pt-4">
+            <h1 id="hero-title">
+              <span className="hero-line">
+                <span>SEU ESTILO.</span>
+              </span>
+              <span className="hero-line">
+                <span>NO TEMPO</span>
+              </span>
+              <span className="hero-line hero-line-gold">
+                <span>CERTO.</span>
+              </span>
+            </h1>
+            <div className="hero-bottom hero-enter">
+              <p>
+                O corte valoriza. O detalhe define.
+                <br />
+                Reserve um tempo para a sua melhor versão.
+              </p>
+              <div className="hero-actions">
                 <a
                   href={WHATSAPP_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 bg-gradient-gold text-primary-foreground px-6 py-4 rounded-xl font-heading tracking-wider text-center shadow-gold hover:scale-105 transition-transform"
+                  className="button button-gold"
                 >
-                  AGENDAR PELO WHATSAPP
+                  <Scissors size={18} /> Agendar meu horário
                 </a>
-                <a
-                  href="https://www.instagram.com/kairos_barbershop.oficial/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Instagram"
-                  className="glass px-6 py-4 rounded-xl flex items-center justify-center hover:bg-secondary transition-colors"
-                >
-                  <Instagram className="w-5 h-5 text-gold" />
+                <a href="#servicos" className="text-link">
+                  Conhecer os serviços
                 </a>
               </div>
             </div>
+          </div>
+          <div className="hero-caption" aria-hidden="true">
+            <span>Tradição no cuidado.</span>
+            <span>Precisão no detalhe.</span>
+          </div>
+          <div className="hero-foot page-width">
+            <span>
+              <Clock size={15} /> Ter — Sáb, 10h às 20h
+            </span>
+            <a href="#sobre" className="scroll-cue">
+              <span className="scroll-track" aria-hidden="true" /> Explore a Kairos
+            </a>
+            <span className="hero-foot-location">Jardim União · Diadema</span>
+          </div>
+        </section>
 
-            <div className="space-y-3" data-scroll-reveal>
+        <div className="marquee" aria-hidden="true">
+          <div className="marquee-track">
+            {Array.from({ length: 4 }, (_, i) => (
+              <span className="marquee-group" key={i}>
+                CORTE <Scissors /> BARBA <Scissors /> IDENTIDADE <Scissors /> KAIROS <Scissors />
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <section
+          id="sobre"
+          className="about section-space page-width"
+          aria-labelledby="about-title"
+        >
+          <div className="about-photo" data-reveal>
+            <div className="photo-crop">
+              <img
+                src={barberImg}
+                alt="Leandro, barbeiro da Kairos"
+                width={1254}
+                height={1254}
+                loading="lazy"
+              />
+            </div>
+            <div className="photo-signature">
+              <span>Leandro</span>
+              <small>À frente da Kairos</small>
+              <Scissors size={25} />
+            </div>
+            <span className="photo-side" aria-hidden="true">
+              TÉCNICA. CUIDADO. PRESENÇA.
+            </span>
+          </div>
+          <div className="about-copy" data-reveal>
+            <p className="eyebrow">A essência Kairos</p>
+            <h2 id="about-title">
+              MAIS QUE UM CORTE.
+              <br />
+              <span>UM TEMPO SEU.</span>
+            </h2>
+            <p>
+              Sentar na cadeira, desacelerar e cuidar de você. Na Kairos, a técnica clássica
+              encontra o estilo de hoje, com atenção ao que faz o seu visual ser único.
+            </p>
+            <p>
+              Leandro está à frente desse cuidado: do acabamento ao atendimento, cada detalhe faz
+              parte da experiência.
+            </p>
+            <div className="about-details">
+              <span>
+                <Scissors size={20} /> Técnica e precisão
+              </span>
+              <span>
+                <Clock size={20} /> Horário marcado
+              </span>
+              <span>
+                <Sparkles size={20} /> Cuidado nos detalhes
+              </span>
+            </div>
+            <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="text-link">
+              Seu próximo corte começa aqui
+            </a>
+          </div>
+        </section>
+
+        <section id="servicos" className="services section-space" aria-labelledby="services-title">
+          <div className="page-width">
+            <div className="section-heading" data-reveal>
+              <div>
+                <p className="eyebrow">Escolha o seu ritual</p>
+                <h2 id="services-title">
+                  ESTILO EM
+                  <br />
+                  <span>CADA DETALHE.</span>
+                </h2>
+              </div>
+              <p>
+                Do clássico ao seu próximo visual.
+                <br />
+                Encontre o cuidado que combina com você.
+              </p>
+            </div>
+            <div className="service-layout" data-reveal>
+              <div className="service-picture">
+                <img
+                  key={category.image}
+                  src={category.image}
+                  alt="Detalhes de um trabalho da Barbearia Kairos"
+                  width={800}
+                  height={1024}
+                  loading="lazy"
+                />
+                <div className="service-picture-caption">
+                  <Scissors size={28} />
+                  <p>
+                    FEITO COM TÉCNICA.
+                    <br />
+                    <span>FINALIZADO COM CUIDADO.</span>
+                  </p>
+                </div>
+              </div>
+              <div className="service-menu">
+                <div className="service-tabs" role="group" aria-label="Categoria de serviços">
+                  {serviceCategories.map((item, index) => (
+                    <button
+                      key={item.key}
+                      type="button"
+                      aria-pressed={activeCategoryIndex === index}
+                      onClick={() => setActiveCategoryIndex(index)}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="service-description">{category.description}</p>
+                <div
+                  className="service-list"
+                  key={category.key}
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
+                  {category.items.map((item, i) => (
+                    <a
+                      key={item.title}
+                      className="service-row"
+                      style={{ "--item-delay": `${i * 45}ms` } as CSSProperties}
+                      href={`https://wa.me/5511947790902?text=${encodeURIComponent(`Olá! Encontrei o site da Kairos e gostaria de agendar: ${item.title}.`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`Agendar ${item.title}, ${item.price}, pelo WhatsApp`}
+                    >
+                      <span>{item.title}</span>
+                      <span className="service-row-price">
+                        {item.price}
+                        <Plus size={17} aria-hidden="true" />
+                      </span>
+                    </a>
+                  ))}
+                </div>
+                <p className="service-note">
+                  <Scissors size={16} /> Toque em um serviço para conversar sobre o agendamento.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="galeria"
+          className="gallery-section section-space page-width"
+          aria-labelledby="gallery-title"
+        >
+          <div className="section-heading" data-reveal>
+            <div>
+              <p className="eyebrow">O detalhe fala por si</p>
+              <h2 id="gallery-title">
+                ASSINATURA
+                <br />
+                <span>KAIROS.</span>
+              </h2>
+            </div>
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-link instagram-link"
+            >
+              <Instagram size={18} /> Mais no Instagram
+            </a>
+          </div>
+          <div className="gallery-grid">
+            {gallery.map((src, i) => (
+              <button
+                className={`gallery-item gallery-item-${i + 1}`}
+                data-reveal
+                type="button"
+                key={src}
+                onClick={() => setLightboxIndex(i)}
+                aria-label={`Ampliar trabalho ${i + 1} da Kairos`}
+              >
+                <img
+                  src={src}
+                  alt={`Trabalho ${i + 1} da Barbearia Kairos`}
+                  width={800}
+                  height={1024}
+                  loading="lazy"
+                />
+                <span className="gallery-caption">
+                  <span>O ESTILO ESTÁ NOS DETALHES</span>
+                  <span className="gallery-expand">
+                    <Plus size={22} />
+                  </span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="booking-banner" aria-labelledby="booking-title">
+          <img src={heroImg} alt="" width={1920} height={1080} loading="lazy" aria-hidden="true" />
+          <div className="page-width booking-content" data-reveal>
+            <p className="eyebrow">Sua próxima versão começa aqui</p>
+            <h2 id="booking-title">
+              TIRE UM TEMPO.
+              <br />
+              <span>MARQUE SEU ESTILO.</span>
+            </h2>
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="button button-gold"
+            >
+              <Scissors size={18} /> Agendar pelo WhatsApp
+            </a>
+          </div>
+        </section>
+
+        <section
+          id="contato"
+          className="contact section-space page-width"
+          aria-labelledby="contact-title"
+        >
+          <div className="section-heading" data-reveal>
+            <div>
+              <p className="eyebrow">A cadeira está te esperando</p>
+              <h2 id="contact-title">
+                SEU PONTO
+                <br />
+                <span>DE ESTILO.</span>
+              </h2>
+            </div>
+            <p>
+              Jardim União, Diadema.
+              <br />
+              Pertinho de você. No seu tempo.
+            </p>
+          </div>
+          <div className="contact-grid">
+            <div className="contact-info" data-reveal>
+              <div className="contact-detail">
+                <MapPin />
+                <div>
+                  <h3>Chegue mais</h3>
+                  <p>
+                    Av. São Bernardo, 357 — Jardim União
+                    <br />
+                    Diadema — SP, CEP 09981-010
+                  </p>
+                  <a
+                    href={GOOGLE_MAPS_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-link"
+                  >
+                    Ver no Google Maps
+                  </a>
+                </div>
+              </div>
+              <div className="contact-detail">
+                <Clock />
+                <div>
+                  <h3>No seu tempo</h3>
+                  <p>
+                    Terça a sábado, das 10h às 20h
+                    <br />
+                    Domingo e segunda: fechado
+                  </p>
+                </div>
+              </div>
+              <div className="contact-detail">
+                <Phone />
+                <div>
+                  <h3>Fale com o Leandro</h3>
+                  <a className="contact-phone" href="tel:+5511947790902">
+                    (11) 94779-0902
+                  </a>
+                  <p>Agende seu horário pelo WhatsApp.</p>
+                </div>
+              </div>
+              <div className="contact-actions">
+                <a
+                  href={WHATSAPP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="button button-gold"
+                >
+                  Conversar no WhatsApp
+                </a>
+                <a
+                  href={INSTAGRAM_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="button button-outline"
+                  aria-label="Instagram da Barbearia Kairos"
+                >
+                  <Instagram size={20} />
+                </a>
+              </div>
+            </div>
+            <div className="contact-map" data-reveal>
               <div
-                className="relative aspect-4/3 w-full overflow-hidden rounded-2xl bg-[#e8e6dc] shadow-card"
+                className="map-canvas"
                 role="group"
                 aria-label="Mapa da região da Barbearia Kairos"
               >
                 <div
+                  className="map-tiles"
                   aria-hidden="true"
-                  className="absolute grid h-192 w-3xl grid-cols-3"
                   style={{
-                    left: `calc(50% - ${MAP_TILE_SIZE + MAP_PIXEL_X}px)`,
-                    top: `calc(50% - ${MAP_TILE_SIZE + MAP_PIXEL_Y}px)`,
+                    left: `calc(50% - ${256 + (mapX % 1) * 256}px)`,
+                    top: `calc(50% - ${256 + (mapY % 1) * 256}px)`,
                   }}
                 >
-                  {MAP_TILES.map((tile) => (
+                  {mapTiles.map((tile) => (
                     <img
                       key={`${tile.x}-${tile.y}`}
                       src={`https://tile.openstreetmap.org/${MAP_ZOOM}/${tile.x}/${tile.y}.png`}
                       alt=""
-                      width={MAP_TILE_SIZE}
-                      height={MAP_TILE_SIZE}
+                      width={256}
+                      height={256}
                       loading="lazy"
                       decoding="async"
                       draggable={false}
                     />
                   ))}
                 </div>
-                <MapPin
-                  aria-hidden="true"
-                  className="absolute left-1/2 top-1/2 z-10 h-10 w-10 -translate-x-1/2 -translate-y-full text-background drop-shadow-lg"
-                  fill="var(--gold)"
-                />
+                <span className="map-pin">
+                  <Scissors size={22} />
+                  <span>KAIROS</span>
+                </span>
                 <a
+                  className="map-attribution"
                   href="https://www.openstreetmap.org/copyright"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="absolute bottom-2 right-2 z-20 rounded bg-background/90 px-2 py-1 text-[10px] text-foreground"
                 >
                   © OpenStreetMap contributors
                 </a>
@@ -603,32 +578,117 @@ function Index() {
                 href={GOOGLE_MAPS_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-secondary px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-secondary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+                className="map-link"
               >
-                Abrir panorama no Google Maps
-                <ExternalLink aria-hidden="true" className="h-4 w-4" />
+                <MapPin size={18} /> Explore a região no Google Maps
               </a>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* FOOTER */}
-      <footer className="border-t border-border py-10">
-        <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-gold flex items-center justify-center">
-              <Scissors className="w-4 h-4 text-background" strokeWidth={2.5} />
-            </div>
-            <span className="font-display font-bold tracking-wider text-gold">
-              BARBEARIA KAIROS
-            </span>
+        </section>
+      </main>
+      <footer className="site-footer">
+        <div className="page-width">
+          <div className="footer-top">
+            <a href="#inicio" className="brand">
+              <Scissors size={25} />
+              <span>
+                KAIROS<small>BARBEARIA</small>
+              </span>
+            </a>
+            <p>Tradição no cuidado. Precisão no detalhe.</p>
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Visite o Instagram da Kairos"
+            >
+              <Instagram size={21} />
+            </a>
           </div>
-          <p className="text-xs text-muted-foreground text-center">
-            © {new Date().getFullYear()} Barbearia Kairos · Tradição, estilo e precisão.
-          </p>
+          <div className="footer-wordmark" aria-hidden="true">
+            KAIROS
+          </div>
+          <div className="footer-bottom">
+            <p>© {new Date().getFullYear()} Barbearia Kairos.</p>
+            <span>Diadema, São Paulo</span>
+            <a href="#inicio">Voltar ao início</a>
+          </div>
         </div>
       </footer>
+      <dialog
+        ref={dialogRef}
+        className="gallery-dialog"
+        aria-labelledby="lightbox-title"
+        onCancel={() => setLightboxIndex(null)}
+        onClose={() => setLightboxIndex(null)}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) setLightboxIndex(null);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowLeft") {
+            e.preventDefault();
+            changeImage(-1);
+          }
+          if (e.key === "ArrowRight") {
+            e.preventDefault();
+            changeImage(1);
+          }
+        }}
+        onTouchStart={(e) => {
+          touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        }}
+        onTouchEnd={(e) => {
+          const start = touchStart.current;
+          touchStart.current = null;
+          if (!start) return;
+          const dx = e.changedTouches[0].clientX - start.x;
+          const dy = e.changedTouches[0].clientY - start.y;
+          if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)) changeImage(dx < 0 ? 1 : -1);
+        }}
+      >
+        <div className="lightbox-top">
+          <p id="lightbox-title">
+            Assinatura Kairos{" "}
+            <span aria-live="polite">
+              {(lightboxIndex ?? 0) + 1} / {gallery.length}
+            </span>
+          </p>
+          <button
+            type="button"
+            className="icon-button"
+            onClick={() => setLightboxIndex(null)}
+            aria-label="Fechar imagem"
+            autoFocus
+          >
+            <X />
+          </button>
+        </div>
+        <div className="lightbox-stage">
+          <button
+            type="button"
+            className="icon-button lightbox-prev"
+            onClick={() => changeImage(-1)}
+            aria-label="Imagem anterior"
+          >
+            <ChevronLeft />
+          </button>
+          {lightboxIndex !== null && (
+            <img
+              src={gallery[lightboxIndex]}
+              alt={`Trabalho ${lightboxIndex + 1} da Barbearia Kairos ampliado`}
+            />
+          )}
+          <button
+            type="button"
+            className="icon-button lightbox-next"
+            onClick={() => changeImage(1)}
+            aria-label="Próxima imagem"
+          >
+            <ChevronRight />
+          </button>
+        </div>
+        <p className="lightbox-hint">Use as setas ou deslize para explorar.</p>
+      </dialog>
     </div>
   );
 }
