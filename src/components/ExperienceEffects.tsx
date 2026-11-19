@@ -98,7 +98,9 @@ export function ExperienceEffects() {
       cursorRef.current?.classList.add("cursor-visible");
       const target = event.target instanceof Element ? event.target : null;
       const card =
-        target?.closest<HTMLElement>(".gallery-item, .about-photo, .service-picture") ?? null;
+        target?.closest<HTMLElement>(
+          ".gallery-item, .about-photo, .service-picture, .service-row",
+        ) ?? null;
       const button = target?.closest<HTMLElement>(".button") ?? null;
       if (card !== activeCard || button !== activeButton) reset();
       activeCard = card;

@@ -1,0 +1,737 @@
+/* Soft architecture and sculptural metal, layered over the existing experience. */
+.hero-sculpture {
+  position: absolute;
+  right: max(5vw, calc((100vw - 1280px) / 2));
+  top: 51%;
+  transform: translateY(-50%);
+  width: min(43vw, 550px);
+  height: min(66svh, 630px);
+  min-height: 500px;
+  z-index: 3;
+  perspective: 1100px;
+  animation: sculpture-arrive 1.5s 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.sculpture-glass {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 34px;
+  border: 1px solid #ddc49b45;
+  background:
+    radial-gradient(ellipse at 55% 35%, #9b75322a, transparent 66%),
+    linear-gradient(145deg, #25291fe8, #10140ff5 80%);
+  box-shadow:
+    inset 1px 1px 0 #ffffff12,
+    inset -1px -1px 0 #0008,
+    0 40px 80px -25px #000a;
+  backdrop-filter: blur(16px);
+  transform: rotateY(-7deg) rotateX(3deg);
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.sculpture-glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  border-radius: inherit;
+  background: linear-gradient(120deg, #f2d8aa0a, transparent 40%, transparent 60%, #d1ad780a);
+}
+.sculpture-heading {
+  position: absolute;
+  left: 28px;
+  right: 25px;
+  top: 25px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  z-index: 3;
+  pointer-events: none;
+}
+.sculpture-monogram {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid #d1ad784d;
+  border-radius: 15px;
+  color: #e4c48e;
+  background: linear-gradient(135deg, #d1ad781a, #d1ad7802);
+  font: 400 1.9rem var(--font-display);
+  box-shadow: inset 1px 1px 0 #fff1;
+}
+.sculpture-heading > span:last-child {
+  font-size: 0.75rem;
+  letter-spacing: 0.13em;
+  line-height: 1.8;
+  color: #a6aa98;
+}
+.sculpture-heading strong {
+  color: #e7e3d5;
+  font-weight: 500;
+}
+.sculpture-canvas {
+  position: absolute;
+  inset: 62px 4px 66px;
+  touch-action: pan-y;
+  cursor: grab;
+  z-index: 1;
+}
+.sculpture-canvas:active {
+  cursor: grabbing;
+}
+.sculpture-canvas canvas,
+.sculpture-canvas svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  animation: sculpture-focus 1.1s ease-out both;
+}
+.sculpture-canvas svg {
+  background: transparent !important;
+}
+.sculpture-glass::after {
+  content: "";
+  position: absolute;
+  width: 78%;
+  aspect-ratio: 1;
+  border: 1px solid #d1ad781f;
+  border-radius: 50%;
+  top: 19%;
+  left: 11%;
+  pointer-events: none;
+}
+.sculpture-fallback {
+  position: absolute;
+  inset: 90px 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.7s;
+}
+.sculpture-ready .sculpture-fallback {
+  opacity: 0;
+}
+.sculpture-fallback > svg {
+  width: 60%;
+  height: 75%;
+  color: #d8b57c;
+  rotate: -30deg;
+  filter: drop-shadow(1px 1px 0 #f7e1ba) drop-shadow(6px 7px 0 #654c2c)
+    drop-shadow(20px 30px 18px #0008);
+}
+.fallback-orbit {
+  position: absolute;
+  width: 90%;
+  aspect-ratio: 1;
+  border: 1px solid #d1ad7838;
+  border-radius: 50%;
+  transform: rotateX(20deg) rotateY(-20deg);
+}
+.fallback-plinth {
+  position: absolute;
+  bottom: 0;
+  width: 65%;
+  height: 30px;
+  background: linear-gradient(#30382a, #0c110b);
+  border: 1px solid #bc9c5e55;
+  border-radius: 50%;
+  box-shadow: 0 20px 35px #0009;
+}
+.sculpture-foot {
+  position: absolute;
+  left: 28px;
+  right: 25px;
+  bottom: 24px;
+  z-index: 3;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+.sculpture-foot > span {
+  font-size: 0.75rem;
+  letter-spacing: 0.09em;
+  line-height: 1.8;
+  color: #929884;
+}
+.sculpture-foot strong {
+  color: #d9be8c;
+  font-weight: 500;
+}
+.sculpture-turn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid #d1ad784d;
+  border-radius: 15px;
+  padding: 10px 12px;
+  background: #d1ad780b;
+  color: #e1c18b;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: background 0.3s;
+}
+.sculpture-turn:hover {
+  background: #d1ad7826;
+}
+.sculpture-floating-note {
+  position: absolute;
+  bottom: 110px;
+  left: -24px;
+  z-index: 4;
+  display: flex;
+  gap: 13px;
+  align-items: center;
+  border: 1px solid #e1c18b50;
+  border-radius: 18px;
+  padding: 18px 23px;
+  background: linear-gradient(135deg, #353c2bf0, #1b2118f5);
+  box-shadow:
+    0 15px 35px #0006,
+    inset 1px 1px 0 #ffffff0d;
+  backdrop-filter: blur(12px);
+  transform: translateZ(45px);
+  animation: sculpture-note 6s ease-in-out infinite;
+}
+.sculpture-floating-note > svg {
+  color: var(--gold);
+}
+.sculpture-floating-note > span {
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: #a6ad9b;
+}
+.sculpture-floating-note strong {
+  color: #f1e6d0;
+  font-weight: 500;
+}
+.hero-caption {
+  display: none;
+}
+.hero-visual::after {
+  background:
+    linear-gradient(90deg, #10110ffa 0%, #10110fe3 32%, #10110f88 60%, #10110f33),
+    linear-gradient(0deg, #10110f, transparent 40%);
+}
+.hero .cinema-corner {
+  display: none;
+}
+.hero .hero-content h1 {
+  max-width: 50%;
+}
+.motion-control {
+  top: 108px;
+  right: 30px;
+}
+
+.button {
+  border-radius: 13px;
+  box-shadow: inset 0 1px 0 #ffffff18;
+}
+.button-gold {
+  background: linear-gradient(135deg, #e5c38f, #cba469);
+  box-shadow:
+    inset 0 1px 0 #fff5,
+    0 8px 25px #d1ad7815;
+}
+.about-photo .photo-crop {
+  border-radius: 30px;
+  border: 1px solid #d1ad7844;
+  box-shadow: 0 30px 65px -30px #000b;
+}
+.photo-signature {
+  border-radius: 22px;
+  background: linear-gradient(135deg, #2c3326, #171e14);
+  box-shadow:
+    inset 1px 1px 0 #ffffff12,
+    0 14px 35px #0005;
+}
+.service-picture {
+  border-radius: 30px;
+  border: 1px solid #d1ad7840;
+  box-shadow:
+    0 30px 70px -35px #000d,
+    inset 1px 1px 0 #fff1;
+}
+.service-picture-caption {
+  padding: 18px;
+  border: 1px solid #d1ad7826;
+  border-radius: 20px;
+  background: #151b12a6;
+  backdrop-filter: blur(12px);
+  left: 20px;
+  right: 20px;
+  bottom: 22px;
+}
+.service-menu {
+  padding: 26px;
+  border: 1px solid #d1ad782b;
+  border-radius: 30px;
+  background: linear-gradient(140deg, #292e22a1, #141a11a6);
+  box-shadow:
+    inset 1px 1px 0 #ffffff0d,
+    0 30px 60px -40px #000b;
+}
+.service-tabs {
+  border: 0;
+  gap: 8px;
+  padding: 5px;
+  border-radius: 16px;
+  background: #0b110a80;
+}
+.service-tabs button {
+  flex: 1;
+  min-height: 46px;
+  padding: 10px 8px;
+  border-radius: 12px;
+  font-size: 0.875rem;
+}
+.service-tabs button::after {
+  display: none;
+}
+.service-tabs button[aria-pressed="true"] {
+  background: linear-gradient(135deg, #e1be88, #bc965e);
+  color: #171d12;
+  box-shadow:
+    0 4px 15px #0004,
+    inset 0 1px 0 #fff4;
+}
+.service-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-content: start;
+  min-height: 365px;
+}
+.service-row {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 21px;
+  border: 1px solid #d1ad782e;
+  border-radius: 19px;
+  background: linear-gradient(135deg, #333a29a1, #1d2518a6);
+  box-shadow:
+    inset 1px 1px 0 #ffffff0a,
+    0 8px 18px #0002;
+  isolation: isolate;
+  transform: perspective(850px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+  transition:
+    transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.35s,
+    box-shadow 0.35s;
+  animation-name: premium-card-enter;
+}
+.service-row::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(
+    180px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+    #f4d7a322,
+    transparent 75%
+  );
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.service-row > span:first-child {
+  font-size: 1rem;
+  line-height: 1.4;
+}
+.service-row-price {
+  width: 100%;
+  justify-content: space-between;
+  font-size: 1.15rem;
+  gap: 10px;
+}
+.service-row-price > svg {
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  padding: 5px;
+  border: 1px solid #d1ad7833;
+  background: #d1ad780a;
+  color: var(--gold);
+}
+.service-description {
+  padding-top: 23px;
+}
+.service-note {
+  font-size: 0.75rem;
+}
+.gallery-item {
+  border-radius: 25px;
+  border: 1px solid #d1ad782e;
+  box-shadow:
+    inset 0 1px 0 #fff2,
+    0 15px 35px #0004;
+}
+.gallery-caption {
+  border-radius: 0 0 25px 25px;
+  padding-top: 55px;
+}
+.gallery-expand {
+  backdrop-filter: blur(10px);
+  background: #161d124d;
+}
+.contact-info {
+  padding: 32px;
+  border: 1px solid #d1ad7833;
+  border-radius: 30px;
+  background:
+    radial-gradient(ellipse at 0 0, #d1ad7810, transparent 70%),
+    linear-gradient(145deg, #252d1fa1, #141b11a6);
+  box-shadow:
+    inset 1px 1px 0 #ffffff0e,
+    0 30px 65px -30px #0008;
+}
+.contact-map {
+  border-radius: 30px;
+  overflow: hidden;
+  box-shadow:
+    0 30px 65px -30px #0008,
+    inset 1px 1px 0 #fff1;
+}
+.map-link {
+  background: linear-gradient(135deg, #242d1e, #121a0f);
+}
+.booking-banner {
+  width: calc(100% - 48px);
+  max-width: 1440px;
+  margin-inline: auto;
+  border: 1px solid #d1ad7840;
+  border-radius: 36px;
+  box-shadow: 0 30px 60px -30px #000c;
+}
+.booking-banner::before {
+  border-radius: 28px;
+}
+.booking-content {
+  width: calc(100% - 96px);
+}
+.site-footer {
+  background: radial-gradient(ellipse at 50% 0, #a0773010, transparent 65%), #0b0d0a;
+}
+@media (hover: hover) and (pointer: fine) {
+  .sculpture-glass:hover {
+    transform: rotateY(-2deg) rotateX(1deg);
+  }
+  .service-row:hover {
+    padding: 21px;
+    border-color: #d1ad7888;
+    box-shadow:
+      inset 1px 1px 0 #ffffff15,
+      0 15px 30px #0005,
+      0 0 25px #d1ad7807;
+  }
+  .service-row:hover::before {
+    opacity: 1;
+  }
+  .gallery-item:hover {
+    border-color: #d1ad7877;
+  }
+}
+@media (max-width: 1199px) and (min-width: 981px) {
+  .hero-sculpture {
+    width: 42vw;
+    right: 36px;
+    min-height: 470px;
+    height: 60svh;
+  }
+  .hero h1 {
+    font-size: clamp(6rem, 10.7vw, 9rem);
+  }
+  .hero-actions {
+    gap: 14px;
+  }
+  .hero-actions .button {
+    padding-inline: 18px;
+  }
+  .service-layout {
+    gap: 32px;
+    grid-template-columns: 0.8fr 1.2fr;
+  }
+  .service-menu {
+    padding: 20px;
+  }
+  .service-row {
+    padding: 18px;
+  }
+  .service-row:hover {
+    padding: 18px;
+  }
+}
+@media (max-width: 980px) {
+  .hero {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    height: auto;
+    max-height: none;
+    min-height: 0;
+    padding-top: 100px;
+    padding-bottom: 28px;
+  }
+  .hero-content {
+    padding-top: 50px;
+    padding-bottom: 40px;
+    translate: none;
+  }
+  .hero .hero-content h1 {
+    max-width: none;
+  }
+  .hero h1 {
+    font-size: clamp(5.6rem, 12vw, 8.5rem);
+  }
+  .hero-sculpture {
+    position: relative;
+    inset: auto;
+    transform: none;
+    width: calc(100% - 80px);
+    max-width: 600px;
+    height: 580px;
+    min-height: 0;
+    margin: 10px auto 65px;
+  }
+  .hero-foot {
+    position: relative;
+    inset: auto;
+    padding-top: 20px;
+  }
+  .hero-visual::after {
+    background:
+      linear-gradient(90deg, #10110ff2, #10110f99), linear-gradient(0deg, #10110f, transparent 60%);
+  }
+  .sculpture-glass {
+    transform: rotateY(-5deg) rotateX(2deg);
+  }
+  .service-layout {
+    gap: 30px;
+    grid-template-columns: 1fr;
+  }
+  .service-picture {
+    min-height: 330px;
+    height: 330px;
+  }
+  .service-picture > img {
+    object-position: center 35%;
+  }
+  .service-list {
+    min-height: 0;
+  }
+  .contact-grid {
+    gap: 28px;
+  }
+  .contact-info {
+    padding: 25px;
+  }
+}
+@media (max-width: 639px) {
+  .hero {
+    padding-top: 105px;
+  }
+  .hero-content {
+    padding-top: 50px;
+    padding-bottom: 35px;
+  }
+  .hero h1 {
+    font-size: clamp(5.1rem, 20.5vw, 7rem);
+  }
+  .hero-sculpture {
+    width: calc(100% - 56px);
+    height: 440px;
+    margin-bottom: 90px;
+  }
+  .sculpture-glass {
+    border-radius: 26px;
+    transform: rotateY(-3deg);
+  }
+  .sculpture-heading {
+    left: 20px;
+    top: 20px;
+    gap: 11px;
+  }
+  .sculpture-monogram {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    font-size: 1.6rem;
+  }
+  .sculpture-heading > span:last-child {
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+  }
+  .sculpture-canvas {
+    inset: 62px 0 64px;
+  }
+  .sculpture-foot {
+    left: 20px;
+    right: 20px;
+    bottom: 20px;
+  }
+  .sculpture-foot > span {
+    font-size: 0.75rem;
+    letter-spacing: 0.02em;
+  }
+  .sculpture-turn {
+    position: absolute;
+    left: 0;
+    bottom: 56px;
+    padding: 10px;
+    border-radius: 12px;
+  }
+  .sculpture-turn > span {
+    display: inline;
+  }
+  .sculpture-floating-note {
+    left: -10px;
+    bottom: -50px;
+    padding: 14px 19px;
+    border-radius: 17px;
+  }
+  .sculpture-floating-note > span {
+    font-size: 0.75rem;
+  }
+  .hero-foot {
+    gap: 12px;
+  }
+  .service-menu {
+    padding: 18px;
+    border-radius: 25px;
+  }
+  .service-tabs {
+    gap: 3px;
+    padding: 4px;
+  }
+  .service-tabs button {
+    font-size: 0.875rem;
+    padding-inline: 6px;
+  }
+  .service-list {
+    gap: 10px;
+  }
+  .service-row,
+  .service-row:hover {
+    padding: 16px;
+    min-height: 135px;
+    border-radius: 17px;
+  }
+  .service-row > span:first-child {
+    max-width: none;
+    font-size: 0.9375rem;
+  }
+  .service-row-price {
+    font-size: 1rem;
+    gap: 6px;
+  }
+  .service-note {
+    font-size: 0.75rem;
+  }
+  .gallery-item {
+    border-radius: 20px;
+  }
+  .gallery-caption {
+    border-radius: 0 0 20px 20px;
+  }
+  .about-photo .photo-crop,
+  .service-picture,
+  .contact-info,
+  .contact-map {
+    border-radius: 25px;
+  }
+  .contact-info {
+    padding: 24px 20px;
+  }
+  .booking-banner {
+    width: calc(100% - 24px);
+    border-radius: 27px;
+  }
+  .booking-content {
+    width: calc(100% - 48px);
+  }
+  .booking-content h2 {
+    font-size: clamp(2.7rem, 10.5vw, 4.3rem);
+  }
+  .booking-banner::before {
+    inset: 7px;
+    border-radius: 21px;
+  }
+}
+@media (max-width: 359px) {
+  .hero-sculpture {
+    width: calc(100% - 40px);
+    height: 410px;
+  }
+  .service-list {
+    grid-template-columns: 1fr;
+  }
+  .service-row {
+    min-height: 115px;
+  }
+  .service-tabs button {
+    font-size: 0.75rem;
+  }
+}
+@keyframes sculpture-arrive {
+  from {
+    opacity: 0;
+    translate: 70px 20px;
+    filter: blur(12px);
+  }
+  to {
+    opacity: 1;
+    translate: 0;
+    filter: none;
+  }
+}
+@keyframes sculpture-focus {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes sculpture-note {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -8px;
+  }
+}
+@keyframes premium-card-enter {
+  from {
+    opacity: 0;
+    translate: 0 15px;
+  }
+  to {
+    opacity: 1;
+    translate: 0;
+  }
+}
+.effects-paused .hero-sculpture,
+.effects-paused .sculpture-glass,
+.effects-paused .sculpture-floating-note {
+  animation: none !important;
+  translate: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-sculpture,
+  .sculpture-glass,
+  .sculpture-floating-note {
+    animation: none !important;
+    translate: none;
+  }
+}

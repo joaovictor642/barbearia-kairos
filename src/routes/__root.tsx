@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import motionCss from "../motion.css?url";
+import premiumCss from "../premium.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
 function NotFoundComponent() {
@@ -100,6 +101,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
       { rel: "stylesheet", href: motionCss },
+      { rel: "stylesheet", href: premiumCss },
     ],
   }),
   shellComponent: RootShell,

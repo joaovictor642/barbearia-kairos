@@ -15,6 +15,7 @@ import {
 import { FloatingNav } from "@/components/FloatingNav";
 import { WhatsappFloat } from "@/components/WhatsappFloat";
 import { ExperienceEffects, HeroAtmosphere } from "@/components/ExperienceEffects";
+import { HeroSculpture } from "@/components/HeroSculpture";
 import { GOOGLE_MAPS_URL, WHATSAPP_URL } from "@/lib/links";
 import heroImg from "@/assets/hero.jpg";
 import hero2Img from "@/assets/hero2.jpg";
@@ -237,6 +238,7 @@ function Index() {
               </div>
             </div>
           </div>
+          <HeroSculpture />
           <div className="hero-caption" aria-hidden="true">
             <span>Tradição no cuidado.</span>
             <span>Precisão no detalhe.</span>
