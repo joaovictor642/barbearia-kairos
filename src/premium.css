@@ -1,4 +1,9 @@
 /* Soft architecture and sculptural metal, layered over the existing experience. */
+@media (min-width: 981px) {
+  .hero-visual img {
+    object-position: 100% center;
+  }
+}
 .hero-sculpture {
   position: absolute;
   right: max(5vw, calc((100vw - 1280px) / 2));

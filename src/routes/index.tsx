@@ -17,7 +17,7 @@ import { WhatsappFloat } from "@/components/WhatsappFloat";
 import { ExperienceEffects, HeroAtmosphere } from "@/components/ExperienceEffects";
 import { HeroSculpture } from "@/components/HeroSculpture";
 import { GOOGLE_MAPS_URL, WHATSAPP_URL } from "@/lib/links";
-import heroImg from "@/assets/hero.jpg";
+import heroImg from "@/assets/kairos-cinematic-banner.webp";
 import hero2Img from "@/assets/hero2.jpg";
 import barberImg from "@/assets/barber.jpg";
 import work1 from "@/assets/work1.jpg";
@@ -169,7 +169,7 @@ function Index() {
       <main id="conteudo">
         <section id="inicio" className="hero" ref={heroRef} aria-labelledby="hero-title">
           <div className="hero-visual" aria-hidden="true">
-            <img src={heroImg} alt="" width={1920} height={1080} fetchPriority="high" />
+            <img src={heroImg} alt="" width={1672} height={941} fetchPriority="high" />
           </div>
           <div className="hero-grid" aria-hidden="true" />
           <HeroAtmosphere />
@@ -465,7 +465,7 @@ function Index() {
         </div>
 
         <section className="booking-banner" aria-labelledby="booking-title">
-          <img src={heroImg} alt="" width={1920} height={1080} loading="lazy" aria-hidden="true" />
+          <img src={heroImg} alt="" width={1672} height={941} loading="lazy" aria-hidden="true" />
           <div className="page-width booking-content" data-reveal>
             <p className="eyebrow">Sua próxima versão começa aqui</p>
             <h2 id="booking-title">
