@@ -4,122 +4,136 @@ import { WHATSAPP_URL } from "@/lib/links";
 
 const links = [
   { href: "#inicio", label: "Início" },
-  { href: "#sobre", label: "Sobre" },
+  { href: "#sobre", label: "A Kairos" },
   { href: "#servicos", label: "Serviços" },
-  { href: "#galeria", label: "Galeria" },
-  { href: "#contato", label: "Contato" },
+  { href: "#galeria", label: "Trabalhos" },
+  { href: "#contato", label: "Encontre-nos" },
 ];
 
 export function FloatingNav() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [active, setActive] = useState("#inicio");
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
     onScroll();
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    if (!("IntersectionObserver" in window))
+      return () => window.removeEventListener("scroll", onScroll);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) setActive(`#${entry.target.id}`);
+        });
+      },
+      { rootMargin: "-15% 0px -60% 0px", threshold: 0 },
+    );
+    links.forEach((link) => {
+      const target = document.querySelector(link.href);
+      if (target) observer.observe(target);
+    });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      observer.disconnect();
+    };
   }, []);
 
   useEffect(() => {
     if (!open) return;
-
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      setOpen(false);
-      menuButtonRef.current?.focus();
+      if (event.key === "Escape") {
+        setOpen(false);
+        menuButtonRef.current?.focus();
+      }
     };
-
+    const onPointerDown = (event: PointerEvent) => {
+      if (!navRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const onResize = () => {
+      if (window.innerWidth >= 900) setOpen(false);
+    };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("resize", onResize);
+    };
   }, [open]);
 
   return (
     <header
-      className={`fixed left-1/2 z-50 -translate-x-1/2 transition-all duration-500 ${
-        scrolled ? "top-3 w-[95%] max-w-5xl" : "top-6 w-[95%] max-w-6xl"
-      }`}
+      ref={navRef}
+      className={`site-header ${scrolled ? "is-scrolled" : ""} ${open ? "menu-is-open" : ""}`}
     >
-      <nav
-        aria-label="Navegação principal"
-        className="glass rounded-full px-4 sm:px-5 py-3 flex items-center justify-between shadow-card"
-      >
-        <a href="#inicio" className="flex items-center gap-2 group">
-          <div className="w-9 h-9 rounded-full bg-gradient-gold flex items-center justify-center shadow-gold">
-            <Scissors className="w-4 h-4 text-background" strokeWidth={2.5} />
-          </div>
-          <div className="leading-tight">
-            <div className="font-display text-sm font-bold tracking-wider text-gold">KAIROS</div>
-            <div className="text-[10px] tracking-[0.3em] text-muted-foreground -mt-0.5">
-              BARBEARIA
-            </div>
-          </div>
+      <nav className="header-inner page-width" aria-label="Navegação principal">
+        <a
+          href="#inicio"
+          className="brand"
+          onClick={() => setOpen(false)}
+          aria-label="Kairos Barbearia, início"
+        >
+          <Scissors size={27} strokeWidth={1.5} />
+          <span>
+            KAIROS<small>BARBEARIA</small>
+          </span>
         </a>
-
-        <ul className="hidden md:flex items-center gap-1">
-          {links.map((l) => (
-            <li key={l.href}>
-              <a
-                href={l.href}
-                className="px-4 py-2 text-sm text-foreground/80 hover:text-gold transition-colors relative font-medium"
-              >
-                {l.label}
+        <ul className="desktop-links">
+          {links.map((link) => (
+            <li key={link.href}>
+              <a href={link.href} aria-current={active === link.href ? "location" : undefined}>
+                {link.label}
               </a>
             </li>
           ))}
         </ul>
-
         <a
           href={WHATSAPP_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="hidden md:inline-flex items-center gap-2 bg-gradient-gold text-primary-foreground px-5 py-2 rounded-full font-heading text-sm shadow-gold hover:-translate-y-0.5 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          className="header-book button button-outline"
         >
-          Agendar
+          Agendar horário
         </a>
-
         <button
           ref={menuButtonRef}
-          aria-label={open ? "Fechar menu de navegação" : "Abrir menu de navegação"}
+          type="button"
+          className="menu-toggle icon-button"
           aria-expanded={open}
           aria-controls="mobile-navigation"
-          type="button"
-          className="md:hidden w-10 h-10 rounded-full bg-secondary flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+          aria-label={open ? "Fechar menu de navegação" : "Abrir menu de navegação"}
           onClick={() => setOpen((v) => !v)}
         >
-          {open ? <X className="w-5 h-5 text-gold" /> : <Menu className="w-5 h-5 text-gold" />}
+          {open ? <X /> : <Menu />}
         </button>
       </nav>
-
-      <div
-        id="mobile-navigation"
-        className={`${open ? "mt-2 glass rounded-2xl p-4 animate-fade-up" : "hidden"} md:hidden`}
-      >
-        <ul className="flex flex-col gap-1">
-          {links.map((l) => (
-            <li key={l.href}>
+      <div id="mobile-navigation" className="mobile-navigation" hidden={!open}>
+        <ul>
+          {links.map((link) => (
+            <li key={link.href}>
               <a
-                href={l.href}
+                href={link.href}
+                aria-current={active === link.href ? "location" : undefined}
                 onClick={() => setOpen(false)}
-                className="block px-4 py-3 rounded-lg text-foreground/90 hover:bg-secondary hover:text-gold transition-colors"
               >
-                {l.label}
+                {link.label}
               </a>
             </li>
           ))}
-          <li>
-            <a
-              href={WHATSAPP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setOpen(false)}
-              className="block mt-2 text-center bg-gradient-gold text-primary-foreground py-3 rounded-lg font-heading"
-            >
-              Agendar Horário
-            </a>
-          </li>
         </ul>
+        <a
+          href={WHATSAPP_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="button button-gold"
+          onClick={() => setOpen(false)}
+        >
+          Agendar pelo WhatsApp
+        </a>
       </div>
     </header>
   );
