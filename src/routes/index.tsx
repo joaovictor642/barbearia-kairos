@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { FloatingNav } from "@/components/FloatingNav";
 import { WhatsappFloat } from "@/components/WhatsappFloat";
+import { ExperienceEffects, HeroAtmosphere } from "@/components/ExperienceEffects";
 import { GOOGLE_MAPS_URL, WHATSAPP_URL } from "@/lib/links";
 import heroImg from "@/assets/hero.jpg";
 import hero2Img from "@/assets/hero2.jpg";
@@ -126,30 +127,16 @@ function Index() {
       .querySelectorAll<HTMLElement>("[data-reveal]")
       .forEach((target) => observer.observe(target));
     document.documentElement.classList.add("motion-ready");
-    let frame = 0;
-    const update = () => {
-      frame = 0;
-      if (motion.matches || !heroRef.current) return;
-      const progress = Math.min(window.scrollY / heroRef.current.offsetHeight, 1);
-      heroRef.current.style.setProperty("--hero-shift", `${progress * 90}px`);
-    };
-    const onScroll = () => {
-      if (!frame) frame = window.requestAnimationFrame(update);
-    };
     const onMotionChange = () => {
       if (motion.matches) {
         document.documentElement.classList.remove("motion-ready");
         heroRef.current?.style.setProperty("--hero-shift", "0px");
       }
     };
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
     motion.addEventListener("change", onMotionChange);
     return () => {
       observer.disconnect();
-      window.removeEventListener("scroll", onScroll);
       motion.removeEventListener("change", onMotionChange);
-      window.cancelAnimationFrame(frame);
       document.documentElement.classList.remove("motion-ready");
     };
   }, []);
@@ -176,25 +163,57 @@ function Index() {
       </a>
       <FloatingNav />
       <WhatsappFloat />
+      <ExperienceEffects />
       <main id="conteudo">
         <section id="inicio" className="hero" ref={heroRef} aria-labelledby="hero-title">
           <div className="hero-visual" aria-hidden="true">
             <img src={heroImg} alt="" width={1920} height={1080} fetchPriority="high" />
           </div>
           <div className="hero-grid" aria-hidden="true" />
+          <HeroAtmosphere />
           <div className="hero-content page-width">
             <p className="eyebrow hero-enter">
               Barbearia Kairos <span>/</span> Diadema, SP
             </p>
-            <h1 id="hero-title">
+            <h1 id="hero-title" aria-label="Seu estilo. No tempo certo.">
               <span className="hero-line">
-                <span>SEU ESTILO.</span>
+                <span aria-hidden="true">
+                  {"SEU ESTILO.".split("").map((letter, i) => (
+                    <span
+                      className="hero-letter"
+                      key={i}
+                      style={{ "--letter-delay": `${i * 38 + 200}ms` } as CSSProperties}
+                    >
+                      {letter === " " ? "\u00a0" : letter}
+                    </span>
+                  ))}
+                </span>
               </span>
               <span className="hero-line">
-                <span>NO TEMPO</span>
+                <span aria-hidden="true">
+                  {"NO TEMPO".split("").map((letter, i) => (
+                    <span
+                      className="hero-letter"
+                      key={i}
+                      style={{ "--letter-delay": `${i * 38 + 430}ms` } as CSSProperties}
+                    >
+                      {letter === " " ? "\u00a0" : letter}
+                    </span>
+                  ))}
+                </span>
               </span>
               <span className="hero-line hero-line-gold">
-                <span>CERTO.</span>
+                <span aria-hidden="true">
+                  {"CERTO.".split("").map((letter, i) => (
+                    <span
+                      className="hero-letter"
+                      key={i}
+                      style={{ "--letter-delay": `${i * 52 + 660}ms` } as CSSProperties}
+                    >
+                      {letter}
+                    </span>
+                  ))}
+                </span>
               </span>
             </h1>
             <div className="hero-bottom hero-enter">
@@ -431,6 +450,16 @@ function Index() {
             ))}
           </div>
         </section>
+
+        <div className="style-ribbon" aria-hidden="true">
+          <div className="style-ribbon-line">
+            <span>PRECISÃO.</span>
+            <span className="outline-word">PRESENÇA.</span>
+            <Scissors />
+            <span>IDENTIDADE.</span>
+            <span className="outline-word">KAIROS.</span>
+          </div>
+        </div>
 
         <section className="booking-banner" aria-labelledby="booking-title">
           <img src={heroImg} alt="" width={1920} height={1080} loading="lazy" aria-hidden="true" />
